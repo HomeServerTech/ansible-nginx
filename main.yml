@@ -24,10 +24,6 @@
     shell: /bin/rm -rf /usr/share/nginx/html/*
   - name: Clonning git repo https://github.com/nwea-techops/tech_quiz
     git: repo=https://github.com/nwea-techops/tech_quiz dest=/usr/share/nginx/html clone=yes update=yes force=yes
-  - name: Change default nginx port
-    shell: sed -i s/80/8888/g /etc/nginx/nginx.conf
-    notify:
-    - reload nginx
   - name: start firewalld
     service: 
       name: firewalld
@@ -38,6 +34,10 @@
       port: 8888/tcp
       permanent: true
       state: enabled
+  - name: Change default nginx port
+    shell: sed -i s/80/8888/g /etc/nginx/nginx.conf
+    notify:
+    - reload nginx
   handlers:
   - name: restart nginx
     service:
