@@ -1,5 +1,5 @@
 --- # Notification and handeling events
-- hosts: digitalocean
+- hosts: nginx
   remote_user: ansible
   become: yes
   become_method: sudo
@@ -10,22 +10,42 @@
     yum:
       name: epel-release
       state: latest
+  - name: Install git
+    yum:
+      name: git
+      state: latest
   - name: Install nginx web server
     yum:
       name: nginx
       state: latest
     notify:
-    - enable and start nginx service
+    - restart nginx
   - name: Remove default nginx site files
-      shell: /bin/rm -rf /usr/share/nginx/html/*
+    shell: /bin/rm -rf /usr/share/nginx/html/*
   - name: Clonning git repo https://github.com/nwea-techops/tech_quiz
-      git: repo=https://github.com/nwea-techops/tech_quiz dest=/usr/share/nginx/html clone=yes update=yes
+    git: repo=https://github.com/nwea-techops/tech_quiz dest=/usr/share/nginx/html clone=yes update=yes force=yes
   - name: Change default nginx port
-      shell: sed s/80/8888/g /etc/nginx/nginx.conf 
+    shell: sed -i s/80/8888/g /etc/nginx/nginx.conf
+    notify:
+    - reload nginx
+  - name: start firewalld
+    service: 
+      name: firewalld
+      enabled: yes
+      state: restarted
+  - name: Open port 8888
+    firewalld:
+      port: 8888/tcp
+      permanent: true
+      state: enabled
   handlers:
-  - name: enable and start nginx service
+  - name: restart nginx
     service:
       name: nginx
       enabled: yes
       state: restarted
-
+  - name: reload nginx
+    service:
+      name: nginx
+      enabled: yes
+      state: reloaded
