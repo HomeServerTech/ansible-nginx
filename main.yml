@@ -1,0 +1,31 @@
+--- # Notification and handeling events
+- hosts: digitalocean
+  remote_user: ansible
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  connection: ssh
+  tasks:
+  - name: Install epel-release
+    yum:
+      name: epel-release
+      state: latest
+  - name: Install nginx web server
+    yum:
+      name: nginx
+      state: latest
+    notify:
+    - enable and start nginx service
+  - name: Remove default nginx site files
+      shell: /bin/rm -rf /usr/share/nginx/html/*
+  - name: Clonning git repo https://github.com/nwea-techops/tech_quiz
+      git: repo=https://github.com/nwea-techops/tech_quiz dest=/usr/share/nginx/html clone=yes update=yes
+  - name: Change default nginx port
+      shell: sed s/80/8888/g /etc/nginx/nginx.conf 
+  handlers:
+  - name: enable and start nginx service
+    service:
+      name: nginx
+      enabled: yes
+      state: restarted
+
